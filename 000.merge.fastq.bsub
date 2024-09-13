@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#BSUB -n 1  # minmal numbers of processors required for a parallel job
+#BSUB -R rusage[mem=2000] # ask for memory 5G
+#BSUB -W 4:00 #limit the job to be finished in 12 hours
+#BSUB -J "fastQC[1-192]%50"
+#BSUB -q short   # which queue we want to run in
+#BSUB -o logs/out.%J.%I.txt # log
+#BSUB -e logs/err.%J.%I.txt # error
+#BSUB -R "span[hosts=1]" # All hosts on the same chassis"
+##BSUB -w "done(5423513)"
+
+i=$(($LSB_JOBINDEX- 1))
+mkdir -p logs
+
+L1_R1=(`find /pi/thomas.fazzio-umw/Evan/worm_scCoT/20240612_worm_scCoT/fastq/usftp21.novogene.com/01.RawData -name "*L1_1.fq.gz" |sort `)
+L4_R1=(`find /pi/thomas.fazzio-umw/Evan/worm_scCoT/20240612_worm_scCoT/fastq/usftp21.novogene.com/01.RawData -name "*L4_1.fq.gz" |sort `)
+
+L1_R2=(`find /pi/thomas.fazzio-umw/Evan/worm_scCoT/20240612_worm_scCoT/fastq/usftp21.novogene.com/01.RawData -name "*L1_2.fq.gz" |sort `)
+L4_R2=(`find /pi/thomas.fazzio-umw/Evan/worm_scCoT/20240612_worm_scCoT/fastq/usftp21.novogene.com/01.RawData -name "*L4_2.fq.gz" |sort `)
+
+L1=(${L1_R1[@]} ${L1_R2[@]})
+L4=(${L4_R1[@]} ${L4_R2[@]})
+
+L1_R1_name=(`find /pi/thomas.fazzio-umw/Evan/worm_scCoT/20240612_worm_scCoT/fastq/usftp21.novogene.com/01.RawData -name "*L1_1.fq.gz" |sort | perl -p -e 's{.+/}{}'`)
+L1_R2_name=(`find /pi/thomas.fazzio-umw/Evan/worm_scCoT/20240612_worm_scCoT/fastq/usftp21.novogene.com/01.RawData -name "*L1_2.fq.gz" |sort | perl -p -e 's{.+/}{}'`)
+
+name=(${L1_R1_name[@]} ${L1_R2_name[@]})
+cat ${L1[$i]} ${L4[$i]} > data/${name[$i]}

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#BSUB -n 1  # minmal numbers of processors required for a parallel job
+#BSUB -R rusage[mem=2000] # ask for memory 5G
+#BSUB -W 4:00 #limit the job to be finished in 12 hours
+#BSUB -J "fastQC[1-96]%50"
+#BSUB -q long   # which queue we want to run in
+#BSUB -o logs/out.%J.%I.txt # log
+#BSUB -e logs/err.%J.%I.txt # error
+#BSUB -R "span[hosts=1]" # All hosts on the same chassis"
+##BSUB -w "done(5423513)"
+
+i=$(($LSB_JOBINDEX- 1))
+mkdir -p logs
+
+
+module load umi_tools/1.1.2
+r1=(data/*_1.fq.gz)
+name=(`ls data/*_1.fq.gz | perl -p -e 's{.+/(.+?)_1.fq.gz}{$1}'`)
+r2=(data/*_2.fq.gz)
+out=data.cellbarcode/ab_barcode_demultiplex
+mkdir -p $out
+
+#ref:https://github.com/mrabarnett/mrab-regex
+
+umi_tools extract --extract-method=regex \
+                --bc-pattern="(?P<cell_1>^.{8})(?P<discard_1>ATCCACGTGCTTGAGCGCGCTGCATACTTG){e<=6}(?P<cell_2>.{6})(?P<discard_2>CCCATGATCGTCCGATCGTCGGCAGCGTCAAAGAAAGATGTGTATAAGAGACAG){e<=8}.*" \
+	        --bc-pattern2="(?P<discard_3>GTCTCGTGGGCTCGGCTGTCCCTGTCC){e<=6}(?P<umi_1>TCTCCGGA|AATGAGCG|GGAATCTC){s<=1}(?P<discard_4>AGATGTGTATAAGAGACAG){e<=6}.*"  \
+                --read2-in=${r2[$i]} --filtered-out $out/${name[$i]}_UNKNOWN_1.fq.gz --filtered-out2  $out/${name[$i]}_UNKNOWN_2.fq.gz \
+		--read2-out=$out/${name[$i]}_2.fq.gz -L logs/${name[$i]}.extract.log  -I ${r1[$i]} -S $out/${name[$i]}_1.fq.gz \
+		--compresslevel=9

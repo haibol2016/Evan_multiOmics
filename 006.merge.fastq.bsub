@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#BSUB -n 1  # minmal numbers of processors required for a parallel job
+#BSUB -R rusage[mem=4000] # ask for memory 5G
+#BSUB -W 4:00 #limit the job to be finished in 12 hours
+#BSUB -J "fastQC[1]"
+#BSUB -q short   # which queue we want to run in
+#BSUB -o logs/out.%J.%I.txt # log
+#BSUB -e logs/err.%J.%I.txt # error
+#BSUB -R "span[hosts=1]" # All hosts on the same chassis"
+##BSUB -w "done(89472)"
+
+i=$(($LSB_JOBINDEX- 1))
+mkdir -p logs
+
+in=data.ab.split.out
+h3k27_1=(`ls $in/*H3K27me3_1.fq.gz | sort`)
+h3k27_2=(`ls $in/*H3K27me3_2.fq.gz |sort`)
+h3k4_1=(`ls $in/*H3K4me3_1.fq.gz | sort`)
+h3k4_2=(`ls $in/*H3K4me3_2.fq.gz  | sort`)
+pol_1=(`ls $in/*Pol2-S2P_1.fq.gz  | sort`)
+pol_2=(`ls $in/*Pol2-S2P_2.fq.gz  | sort`)
+
+out=data/00.antibody.split.out
+mkdir -p ${out}
+
+cat ${h3k27_1[@]} > $out/H3K27me3_S1_L001_R1_001.fq.gz
+cat ${h3k27_2[@]} >  $out/H3K27me3_S1_L001_R2_001.fq.gz
+cat ${h3k4_1[@]} >  $out/H3K4me3_S1_L001_R1_001.fq.gz
+cat ${h3k4_2[@]} >  $out/H3K4me3_S1_L001_R2_001.fq.gz
+cat ${pol_1[@]} >   $out/PolII_S1_L001_R1_001.fq.gz
+cat ${pol_2[@]} >  $out/polII_S1_L001_R2_001.fq.gz
+

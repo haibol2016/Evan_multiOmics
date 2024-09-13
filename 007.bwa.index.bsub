@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#BSUB -n 1  # minmal numbers of processors required for a parallel job
+#BSUB -R rusage[mem=8000] # ask for memory 8G per core
+#BSUB -W 72:00 #limit the job to be finished in 4 hours
+#BSUB -J "bwa_index"
+#BSUB -q long # which queue we want to run in
+#BSUB -o logs/out.%J.%I.txt # log
+#BSUB -e logs/err.%J.%I.txt # error
+#BSUB -R "span[hosts=1]" # All hosts on the same chassis"
+
+mkdir -p logs
+
+module load bwa/0.7.17
+
+gunzip -k docs/Caenorhabditis_elegans.WBcel235.dna.toplevel.fa.gz
+
+fasta=docs/Caenorhabditis_elegans.WBcel235.dna.toplevel.fa
+
+bwa index -p docs/WBcel235  ${fasta}
+

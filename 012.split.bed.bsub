@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#BSUB -n 4  # minmal numbers of processors required for a parallel job
+#BSUB -R rusage[mem=8000] # ask for memory 5G
+#BSUB -W 4:00 #limit the job to be finished in 12 hours
+#BSUB -J "fastQC[1-2]%50"
+#BSUB -q long   # which queue we want to run in
+#BSUB -o logs/out.%J.%I.txt # log
+#BSUB -e logs/err.%J.%I.txt # error
+#BSUB -R "span[hosts=1]" # All hosts on the same chassis"
+##BSUB -w "done(5423513)"
+
+i=$(($LSB_JOBINDEX- 1))
+mkdir -p logs
+
+source /home/haibo.liu-umw/miniconda3/etc/profile.d/conda.sh
+conda activate cleanuprnaseq
+
+in=results/004.fragments.out
+frag=(results/004.fragments.out/{H3K27me3_S1_L001.fragments.bed,H3K4me3_S1_L001.fragments.bed})
+out=results/005.split.bed
+
+mkdir -p $out
+
+cluster=(docs/H3K27me3.cluster.info.txt docs/H3K4me3.cluster.info.txt)
+
+
+python scripts/010.split.bed.py ${cluster[$i]}  ${frag[$i]}  $out

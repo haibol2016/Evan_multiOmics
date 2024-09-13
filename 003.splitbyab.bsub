@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#BSUB -n 1  # minmal numbers of processors required for a parallel job
+#BSUB -R rusage[mem=2000] # ask for memory 5G
+#BSUB -W 4:00 #limit the job to be finished in 12 hours
+#BSUB -J "fastQC[1-96]%50"
+#BSUB -q long   # which queue we want to run in
+#BSUB -o logs/out.%J.%I.txt # log
+#BSUB -e logs/err.%J.%I.txt # error
+#BSUB -R "span[hosts=1]" # All hosts on the same chassis"
+##BSUB -w "done(5423513)"
+
+i=$(($LSB_JOBINDEX- 1))
+mkdir -p logs
+
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate cleanuprnaseq
+
+in=data.cellbarcode/ab_barcode_demultiplex
+r1=($in/*L1_1.fq.gz)
+name=(`ls data/*_L1_1.fq.gz | perl -p -e 's{.+/(.+?)_L1_1.fq.gz}{$1}'`)
+r2=($in/*L1_2.fq.gz)
+out=data.ab.split.out
+mkdir -p $out
+
+
+python scripts/003.splitbyab.py ${r1[$i]} ${r2[$i]} ${name[$i]} $out
+
+
